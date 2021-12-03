@@ -11,7 +11,13 @@
     }
     plugins:[] 插件
     loader:
-    我们知道 webpack 只会编译处理js，json格式的模块 . 用于对模块的源代码进行转换。
+    我们知道 webpack 只会编译处理js，json格式的模块->用于对模块的源代码进行转换。
+    loader 如何接受配置 ->{
+    loader:name,
+    options:{
+        //loader的配置
+    }
+}
 */
 
 const { resolve } = require('path');
@@ -26,10 +32,12 @@ module.exports = {
     login: './src/login.js',
   },
   output: {
-    path: resolve(__dirname, './build'),
+    path: resolve(__dirname, './dist'),
     filename: '[name].js', //name 占位符 代表着打包出来以后，会被替换
   },
-
+  resolveLoader: {
+    modules: ['node_modules', './my-loaders'],
+  },
   module: {
     // 当webpack 原本不支持的模块，需要其他方式使之可以使用时，需要做module这个key 下对其设置
     rules: [
@@ -37,6 +45,31 @@ module.exports = {
         test: /\.css$/,
         // use: ['style-loader', 'css-loader'], //执行顺序 从后向前
         use: [miniCssPlugin.loader, 'css-loader'],
+        /*
+        loader 配置 [miniCssPlugin.loader, 'css-loader'],
+        = [miniCssPlugin.loader, {
+            loader:'css-loader',
+            options:{}
+        }]
+        */
+      },
+      {
+        test: /\.less$/,
+        // use: [miniCssPlugin.loader, 'css-loader', 'postcss-loader', 'less-loader'],
+        use: ['mystyle-loader', 'mycss-loader', 'myless-loader'],
+      },
+      // 自定义loader
+      {
+        test: /\.js$/,
+        use: [
+          'js-async-loader', // 自定义loader webapck
+          {
+            loader: 'js-loader',
+            options: {
+              name: '自定义loader',
+            },
+          },
+        ],
       },
     ],
   },

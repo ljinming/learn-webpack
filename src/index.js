@@ -1,4 +1,3 @@
-import { a } from './a';
-import css from './style/index.css';
+import css from './style/index.less';
 
-console.log('--hello webpack ' + a);
+console.log('--hello webpack ');
