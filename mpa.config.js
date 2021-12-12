@@ -1,48 +1,48 @@
-//  webpack 基于nodejs
-
-/*
-// spa 但页面应用 mpa多页面应用
-
-    入口：entry  支持绝对路径或者相对路径
-        string｜{}  多入口对应多出口
-    出口:output{
-        path: 生成的资源存放的位置，必须是绝对路径
-        filename:生成资源的名字
-    }
-    plugins:[] 插件
-    loader:
-    我们知道 webpack 只会编译处理js，json格式的模块->用于对模块的源代码进行转换。
-    loader 如何接受配置 ->{
-    loader:name,
-    options:{
-        //loader的配置
-    }
--file-loader 配置
-    options:{
-        //loader的配置
-        name:生成资源的name
-        outputPath：存放资源的文件
-        publicPath:图片资源的引入资源的位置, 
-        //当图片资源通过长css 方式引入时，打包出来的css文件会在主路径下，如果对css 做文件管理，存在找不到路径的情况，
-        当存在publicPath 值时，css 会在publicPath的值下进行引入
-    }
-}
-*/
-
-const { resolve } = require('path');
+const glob = require('glob');
+const { resolve, join } = require('path');
 const htmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const miniCssPlugin = require('mini-css-extract-plugin');
 
+function mpa() {
+  let entry = {};
+  let htmlWebpackPlugins = [];
+
+  const entryPath = glob.sync(join(__dirname, './src/*/index.js'));
+  entryPath.forEach((item) => {
+    //'/Users/ming/code/learn-webpack/src/home/index.js',
+    /*
+    item.match(/src\/(.*)\/index\.js$/),
+        [
+        'src/login/index.js',
+        'login',
+        index: 31,
+        input: '/Users/ming/code/learn-webpack/src/login/index.js',
+        groups: undefined
+        ]
+    */
+    const entryName = item.match(/src\/(.*)\/index\.js$/)[1];
+    entry[entryName] = item;
+    htmlWebpackPlugins.push(
+      new htmlWebpackPlugin({
+        template: join(__dirname, `./public/${entryName}.html`),
+        filename: `${entryName}.html`,
+        chunks: [entryName],
+      })
+    );
+  });
+
+  return { entry, htmlWebpackPlugins };
+}
+
+const { entry, htmlWebpackPlugins } = mpa();
+
 module.exports = {
   mode: 'development',
-  entry: {
-    index: './src/index.js',
-    login: './src/login.js',
-  },
+  entry,
   output: {
-    path: resolve(__dirname, './dist'),
-    filename: '[name].js', //name 占位符 代表着打包出来以后，会被替换
+    path: resolve(__dirname, './mpa'),
+    filename: 'js/[name].js', //name 占位符 代表着打包出来以后，会被替换
   },
   resolveLoader: {
     modules: ['node_modules', './my-loaders'],
@@ -55,12 +55,12 @@ module.exports = {
         // use: ['style-loader', 'css-loader'], //执行顺序 从后向前
         use: [miniCssPlugin.loader, 'css-loader'],
         /*
-        loader 配置 [miniCssPlugin.loader, 'css-loader'],
-        = [miniCssPlugin.loader, {
-            loader:'css-loader',
-            options:{}
-        }]
-        */
+          loader 配置 [miniCssPlugin.loader, 'css-loader'],
+          = [miniCssPlugin.loader, {
+              loader:'css-loader',
+              options:{}
+          }]
+          */
       },
       {
         test: /\.less$/,
@@ -109,16 +109,7 @@ module.exports = {
 
   plugins: [
     new CleanWebpackPlugin(),
-    new htmlWebpackPlugin({
-      template: './public/index.html',
-      filename: 'index.html',
-      chunks: ['index'],
-    }),
-    // new htmlWebpackPlugin({
-    //   template: './public/login.html',
-    //   filename: 'login.html',
-    //   chunks: ['login'], //做资源的区分 只使用自己的资源
-    // }),
+    ...htmlWebpackPlugins,
     new miniCssPlugin({
       filename: 'style/index.css',
     }),
