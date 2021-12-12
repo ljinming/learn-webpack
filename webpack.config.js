@@ -33,12 +33,13 @@ const { resolve } = require('path');
 const htmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const miniCssPlugin = require('mini-css-extract-plugin');
+const txtplugin = require('./myplugins/txt-webpack-plugin');
 
 module.exports = {
   mode: 'development',
   entry: {
-    index: './src/index.js',
-    login: './src/login.js',
+    index: './src/home/index.js',
+    login: './src/login/index.js',
   },
   output: {
     path: resolve(__dirname, './dist'),
@@ -90,6 +91,24 @@ module.exports = {
           },
         },
       },
+      {
+        test: /\.js$/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              [
+                '@babel/preset-env',
+                // {
+                //   corejs: 2,
+                //   useBuiltIns: 'usage',
+                // },
+              ],
+              '@babel/preset-react',
+            ],
+          },
+        },
+      },
       // 'image-webpack-loader',
       // 自定义loader
       {
@@ -110,7 +129,7 @@ module.exports = {
   plugins: [
     new CleanWebpackPlugin(),
     new htmlWebpackPlugin({
-      template: './public/index.html',
+      template: './public/home.html',
       filename: 'index.html',
       chunks: ['index'],
     }),
@@ -122,5 +141,6 @@ module.exports = {
     new miniCssPlugin({
       filename: 'style/index.css',
     }),
+    new txtplugin(),
   ],
 };
